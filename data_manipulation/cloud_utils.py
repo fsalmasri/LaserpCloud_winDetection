@@ -13,8 +13,8 @@ from typing import Tuple, Callable
 
 # Set path to data directories here
 LAZ_DIR = ""
-PTX_DIR = "data"
-IMAGE_DIR = "data"
+PTX_DIR = "/home/feras/Desktop/data/PTX/scan_L_ext.ptx"
+IMAGE_DIR = "/home/feras/Desktop/data/imgs"
 
 # Change to "LAZ" if using laz files
 CLOUD_FORMAT = "PTX"
@@ -156,6 +156,7 @@ def cloud2im(name: str):
 
 
     imsave(f"{IMAGE_DIR}/{name}.png", intensity)
+    return intensity
 
 
 def cloud2im_depth(name: str):
