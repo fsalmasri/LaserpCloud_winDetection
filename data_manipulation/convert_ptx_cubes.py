@@ -9,24 +9,19 @@ from py360convert import e2c
 
 
 cubes_dir = '/home/feras/Desktop/data/cubes'
-fname = 'Ulb_L065'
-img = cloud2im(fname)
+fnames = os.listdir('/home/feras/Desktop/data/PTX/scan_L_ext.ptx')
 
-if not exists(join(cubes_dir, fname)):
-    os.makedirs(join(cubes_dir, fname))
-print(img.shape)
+for fname in fnames:
+    img = cloud2im(fname[:-4])
 
-exists()
-# if len(img.shape) == 2:
-#     img = img[..., None]
+    if not exists(join(cubes_dir, fname)):
+        os.makedirs(join(cubes_dir, fname))
 
-# w = round((np.sqrt(3)/6) * img.shape[1]) #https://krpano.com/forum/wbb/index.php?page=Thread&threadID=2018
-# out = e2c(img, face_w=w, mode='bilinear', cube_format='dict')
-#
-# print(list(out.keys()))
-#
-# for f in out:
-#     # np.save(f'data/{f}.npy', out[f])
-#     # print(out[f].shape)
-#     plt.imshow(out[f])
-#     plt.show()
+    if len(img.shape) == 2:
+        img = img[..., None]
+
+    w = round((np.sqrt(3)/6) * img.shape[1]) #https://krpano.com/forum/wbb/index.php?page=Thread&threadID=2018
+    out = e2c(img, face_w=w, mode='bilinear', cube_format='dict')
+
+    for f in out:
+        np.save(join(cubes_dir, fname, f), out[f])
