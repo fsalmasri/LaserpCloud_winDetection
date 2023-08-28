@@ -1,10 +1,12 @@
 import laspy
+import matplotlib.pyplot as plt
 import numpy as np
 import os
 from skimage.io import imsave
 import subprocess
 import multiprocessing as mp
 import json
+import time
 
 import matplotlib as mpl
 import matplotlib.cm as cm
@@ -15,6 +17,8 @@ from typing import Tuple, Callable
 LAZ_DIR = ""
 PTX_DIR = "/home/feras/Desktop/data/PTX/scan_L_ext.ptx"
 IMAGE_DIR = "/home/feras/Desktop/data/imgs"
+XYZ_DIR = "/home/feras/Desktop/data/XYZ"
+intesnity_DIR = "/home/feras/Desktop/data/intensity"
 
 # Change to "LAZ" if using laz files
 CLOUD_FORMAT = "PTX"
@@ -105,6 +109,36 @@ def ptx_data(name: str) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
     return X, Y, Z, intensity
 
 
+def ptx_data_v2(name: str) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Reads data from a PTX file. Only the position of the points and the intensity is
+    read: if color information is included, it is ignored.
+    This second version read the entire file at once.
+    Parameters
+    ----------
+    name: str
+    Name of the file (without extension). File is assumed to be in the specified directory
+
+    Returns
+    -------
+    X, Y, Z, intensity: Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
+    """
+    with open(f"{name}", 'rb') as script:
+       ptx_file = script.read().split()
+
+    width = int(ptx_file[0])
+    height = int(ptx_file[1])
+
+    xyz_tmp = np.fromiter(ptx_file[30:], dtype=float).reshape(-1,4).astype(float)
+
+    X = xyz_tmp[:, 0].reshape((height, width), order='F')
+    Y = xyz_tmp[:, 1].reshape((height, width), order='F')
+    Z = xyz_tmp[:, 2].reshape((height, width), order='F')
+    intensity = xyz_tmp[:,3].reshape((height, width), order='F')
+
+    return X, Y, Z, intensity
+
+
 def laz_data(name: str) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Reads data from a LAZ file. Only the position of the points and the intensity is
@@ -134,7 +168,7 @@ def laz_data(name: str) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
 
 # Decide which method is used to read the cloud
 if CLOUD_FORMAT == "PTX":
-    READ_CLOUD = ptx_data
+    READ_CLOUD = ptx_data_v2
 elif CLOUD_FORMAT == "LAZ":
     READ_CLOUD = laz_data
 else:
@@ -152,11 +186,13 @@ def cloud2im(name: str):
     -------
 
     """
-    _, _, _, intensity = READ_CLOUD(name)
 
+    start = time.time()
+    X, Y, Z, intensity = READ_CLOUD(name)
+    end = time.time()
+    print(f'File loaded with {end - start:.2f} sec')
 
-    imsave(f"{IMAGE_DIR}/{name}.png", intensity)
-    return intensity
+    return [X, Y, Z], intensity
 
 
 def cloud2im_depth(name: str):
